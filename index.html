@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Розовая Кулинария — Книга Рецептов</title>
+    <style>
+        /* Базовые настройки темы (Розовый и Белый) */
+        :root {
+            --bg-color: #fff0f3;
+            --card-bg: #ffffff;
+            --primary-pink: #ff85a1;
+            --hover-pink: #ff477e;
+            --light-pink: #fbb1bd;
+            --dark-pink: #ff5c8a;
+            --text-color: #4a4a4a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Шапка сайта */
+        header {
+            background-color: #ffffff;
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 3px solid var(--light-pink);
+            box-shadow: 0 4px 15px rgba(255, 133, 161, 0.15);
+        }
+
+        header h1 {
+            color: var(--dark-pink);
+            margin: 0;
+            font-size: 2.8rem;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            color: var(--primary-pink);
+            font-size: 1.2rem;
+            margin: 10px 0 0 0;
+            font-style: italic;
+        }
+
+        /* Главный контейнер */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Сетка карточек */
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        /* Стили карточки */
+        .recipe-card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(255, 133, 161, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(255, 133, 161, 0.25);
+            border-color: var(--light-pink);
+        }
+
+        .recipe-card .category {
+            font-size: 0.8rem;
+            color: var(--primary-pink);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .recipe-card h3 {
+            color: var(--dark-pink);
+            margin: 10px 0 20px 0;
+            font-size: 1.5rem;
+        }
+
+        .recipe-card .open-btn {
+            background-color: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            align-self: center;
+        }
+
+        .recipe-card:hover .open-btn {
+            background-color: var(--hover-pink);
+        }
+
+        /* Скрытый блок с рецептом внутри карточки */
+        .recipe-details {
+            display: none;
+        }
+
+        /* Стили модального окна (всплывающее окно) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 240, 243, 0.85);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 25px;
+            max-width: 650px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(255, 71, 126, 0.2);
+            border: 3px solid var(--primary-pink);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 35px;
+            color: var(--light-pink);
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: var(--hover-pink);
+        }
+
+        .modal-title {
+            color: var(--dark-pink);
+            margin-top: 0;
+            font-size: 2.2rem;
+            border-bottom: 2px dashed var(--light-pink);
+            padding-bottom: 15px;
+            text-align: center;
+        }
+
+        .modal-body h4 {
+            color: var(--dark-pink);
+            font-size: 1.2rem;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-pink);
+            padding-left: 10px;
+        }
+
+        .modal-body ul, .modal-body ol {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .modal-body li {
+            margin-bottom: 8px;
+        }
+
+        /* Скроллбар для модального окна */
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .modal-content::-webkit-scrollbar-thumb {
+            background: var(--light-pink);
+            border-radius: 10px;
+        }
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-pink);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Sweet & Pink Kitchen</h1>
+        <p>Kнига самых вкусных рецептов для маленькой криськи</p>
+    </header>
+
+    <div class="container">
+        <div class="recipe-grid">
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Десерты</div>
+                    <h3>Клубничный торт</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Мука — 200 г</li>
+                        <li>Сахар — 150 г</li>
+                        <li>Яйца — 4 шт.</li>
+                        <li>Свежая клубника — 300 г</li>
+                        <li>Сливки 33% — 400 мл</li>
+                        <li>Сахарная пудра — 80 г</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Взбивайте яйца с сахаром миксером 10 минут до пышной белой пены. Аккуратно лопаткой вмешайте просеянную муку.</li>
+                        <li>Выпекайте бисквит при 180°C около 30-35 минут. Остудите и разрежьте на 2-3 коржа.</li>
+                        <li>Взбейте холодные сливки с сахарной пудрой до плотных пиков.</li>
+                        <li>Соберите торт: промажьте коржи кремом, выкладывая между ними нарезанную слайсами клубнику. Украсьте ягодами сверху.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Десерты</div>
+                    <h3>Макароны с малиной</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Миндальная мука — 100 г</li>
+                        <li>Сахарная пудра — 100 г</li>
+                        <li>Яичные белки — 75 г</li>
+                        <li>Сахар — 90 г</li>
+                        <li>Розовый краситель — по желанию</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Просейте миндальную муку с сахарной пудрой два раза.</li>
+                        <li>Взбейте белки, постепенно добавляя сахар, до жестких пиков. Добавьте каплю красителя.</li>
+                        <li>Соедините сухую смесь с белками (макронаж) до состояния "текучей ленты".</li>
+                        <li>Отсадите кружочки на коврик, оставьте на 30 минут подсохнуть. Выпекайте при 150°C 14 минут. Соедините половинки малиновым ганашем.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Завтраки</div>
+                    <h3>Блины с малиной</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Молоко — 500 мл</li>
+                        <li>Яйца — 2 шт.</li>
+                        <li>Мука — 200 г</li>
+                        <li>Сахар — 2 ст. л.</li>
+                        <li>Растительное масло — 2 ст. л.</li>
+                        <li>Свежая малина — 150 г</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Взбейте яйца с сахаром и солью, влейте половину теплого молока.</li>
+                        <li>Добавьте муку, тщательно перемешайте венчиком, чтобы не было комков. Долейте оставшееся молоко и масло.</li>
+                        <li>Выпекайте тонкие блинчики на раскаленной сковороде с двух сторон.</li>
+                        <li>Заверните в каждый блинчик горсть свежей малины, слегка присыпанной сахарной пудрой.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Десерты</div>
+                    <h3>Нежные капкейки</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Сливочное масло — 100 г</li>
+                        <li>Сахар — 120 г</li>
+                        <li>Яйца — 2 шт.</li>
+                        <li>Мука — 150 г</li>
+                        <li>Разрыхлитель — 1 ч. л.</li>
+                        <li>Творожный сыр (для крема) — 200 г</li>
+                        <li>Сливки 33% — 80 мл</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Взбейте мягкое сливочное масло с сахаром, поочередно добавляя яйца.</li>
+                        <li>Всыпьте муку с разрыхлителем, замесите нежное тесто. Разложите по формочкам и выпекайте 20 минут при 180°C.</li>
+                        <li>Для крема взбейте холодный творожный сыр, сливки и 50 г сахарной пудры.</li>
+                        <li>Кондитерским мешком отсадите красивые кремовые шапочки на остывшие кексы.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Завтраки</div>
+                    <h3>Ягодный смузи-боул</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Замороженная клубника и малина — 150 г</li>
+                        <li>Банан — 1 шт.</li>
+                        <li>Кокосовое или миндальное молоко — 100 мл</li>
+                        <li>Гранола, семена чиа, ягоды — для украшения</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Поместите в чашу блендера замороженные ягоды и нарезанный банан.</li>
+                        <li>Влейте растительное молоко и взбивайте на высокой скорости до получения густой однородной массы (как мягкое мороженое).</li>
+                        <li>Переложите смузи в глубокую миску (боул).</li>
+                        <li>Красивыми рядами выложите сверху гранолу, свежие ягоды, семена чиа или кокосовую стружку.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Салаты</div>
+                    <h3>Салат «Цезарь»</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Куриное филе — 200 г</li>
+                        <li>Салат Романо или Айсберг — 1 пучок</li>
+                        <li>Сухарики из белого хлеба — 50 г</li>
+                        <li>Сыр Пармезан — 30 г</li>
+                        <li>Соус «Цезарь» — 3 ст. л.</li>
+                        <li>Черри — 5-6 шт.</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Куриное филе нарежьте, посолите, поперчите и обжарьте на сковороде до золотистой корочки (около 7-10 минут).</li>
+                        <li>Листья салата промойте, обсушите и порвите руками в глубокую миску.</li>
+                        <li>Добавьте нарезанную теплую курицу и половинки томатов черри.</li>
+                        <li>Полейте соусом, посыпьте сухариками и мелко натертым пармезаном перед самой подачей.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Горячее</div>
+                    <h3>Паста Карбонара</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Спагетти — 200 г</li>
+                        <li>Бекон или гуанчиале — 100 г</li>
+                        <li>Яичные желтки — 3 шт.</li>
+                        <li>Сыр Пармезан или Пекорино — 50 г</li>
+                        <li>Черный свежемолотый перец — по вкусу</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Отварите спагетти в подсоленной воде до состояния аль денте (на 1-2 минуты меньше, чем указано на упаковке).</li>
+                        <li>Параллельно обжарьте нарезанный бекон на сухой сковороде до хрустящей корочки.</li>
+                        <li>В миске смешайте желтки с мелко натертым сыром и большим количеством черного перца.</li>
+                        <li>Переложите горячую пасту к бекону, снимите с огня, влейте яично-сырную смесь и быстро перемешайте, добавив 2-3 ложки воды от пасты.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Горячее</div>
+                    <h3>Пицца Маргарита</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Готовое тесто для пиццы — 250 г</li>
+                        <li>Томатный соус — 4 ст. л.</li>
+                        <li>Сыр Моцарелла (в шариках) — 150 г</li>
+                        <li>Свежий базилик — несколько листочков</li>
+                        <li>Оливковое масло — 1 ч. л.</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Раскатайте или растяните руками тесто для пиццы в круг на пергаменте.</li>
+                        <li>Равномерно смажьте основу томатным соусом, отступая от краев по 1.5 см.</li>
+                        <li>Руками порвите моцареллу и распределите её по пицце. Сбрызните оливковым маслом.</li>
+                        <li>Выпекайте в разогретой до 240°C духовке около 8-10 минут. Готовую пиццу украсьте свежим базиликом.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Супы</div>
+                    <h3>Тыквенный суп-пюре</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Мякоть тыквы — 500 г</li>
+                        <li>Картофель — 1 шт.</li>
+                        <li>Репчатый лук — 1 шт.</li>
+                        <li>Сливки 20% — 150 мл</li>
+                        <li>Сливочное масло — 20 г</li>
+                        <li>Тыквенные семечки — для подачи</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Нарежьте лук, картофель и тыкву кубиками.</li>
+                        <li>В кастрюле растопите сливочное масло, обжарьте лук до прозрачности. Добавьте тыкву и картофель, залейте водой, чтобы она слегка прикрывала овощи.</li>
+                        <li>Варите на среднем огне до полной мягкости картофеля и тыквы (около 20 минут).</li>
+                        <li>Слейте часть бульона в стакан, пюрируйте овощи блендером. Добавьте теплые сливки, соль, специи и прогрейте суп (не доводя до кипения). Подавайте с семечками.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Горячее</div>
+                    <h3>Запеченный лосось</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Стейки лосося или семги — 2 шт.</li>
+                        <li>Лимон — 0.5 шт.</li>
+                        <li>Оливковое масло — 1 ст. л.</li>
+                        <li>Сушеный розмарин или тимьян — 0.5 ч. л.</li>
+                        <li>Соль, перец — по вкусу</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Промойте стейки рыбы и тщательно обсушите их бумажным полотенцем.</li>
+                        <li>Натрите рыбу солью, черным перцем и сушеными травами со всех сторон, сбрызните оливковым маслом.</li>
+                        <li>Выложите рыбу в форму для запекания, сверху на каждый кусок положите по 1-2 кружочка лимона.</li>
+                        <li>Запекайте в духовке, разогретой до 190°C, в течение 15-20 минут (не пересушите!).</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Завтраки</div>
+                    <h3>Французские тосты</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Тостовый хлеб или бриошь — 4 ломтика</li>
+                        <li>Яйцо — 1 шт.</li>
+                        <li>Молоко — 60 мл</li>
+                        <li>Корица — щепотка</li>
+                        <li>Ванильный сахар — 0.5 ч. л.</li>
+                        <li>Сливочное масло — 15 г</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>В глубокой тарелке соедините яйцо, молоко, корицу и ванильный сахар. Взбейте венчиком или вилкой до однородности.</li>
+                        <li>Разогрейте сковороду со сливочным маслом.</li>
+                        <li>Каждый ломтик хлеба окуните в яичную смесь на 5-10 секунд с каждой стороны, чтобы он пропитался.</li>
+                        <li>Обжаривайте тосты на среднем огне до красивой золотистой корочки (примерно по 2-3 минуты с каждой стороны). Подавайте с медом или ягодами.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Завтраки</div>
+                    <h3>Пышные сырники</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Творог 5-9% (сухой) — 400 г</li>
+                        <li>Яйцо — 1 шт.</li>
+                        <li>Мука пшеничная — 3 ст. л. (и еще немного для обвалки)</li>
+                        <li>Сахар — 2 ст. л.</li>
+                        <li>Ванилин — на кончике ножа</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Творог разомните вилкой или перетрите через сито. Добавьте яйцо, сахар, ванилин и перемешайте.</li>
+                        <li>Добавьте муку и замесите мягкое, слегка липкое творожное тесто.</li>
+                        <li>Припылите стол мукой, скатайте из теста колбаску и разрежьте на равные части. Сформируйте круглые сырники с помощью ножа или стакана.</li>
+                        <li>Обжаривайте на разогретом масле под крышкой на среднем огне по 4-5 минут с каждой стороны.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Десерты</div>
+                    <h3>Крем-брюле</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Сливки 33% — 400 мл</li>
+                        <li>Яичные желтки — 4 шт.</li>
+                        <li>Сахар — 60 г</li>
+                        <li>Ванильный экстракт — 1 ч. л.</li>
+                        <li>Тростниковый сахар — 2-3 ч. л. (для корочки)</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Налейте сливки в сотейник, добавьте ваниль и доведите почти до кипения, затем снимите с огня.</li>
+                        <li>Желтки разотрите с обычным сахаром венчиком (не взбивайте в пену).</li>
+                        <li>Тонкой струйкой, постоянно помешивая, влейте теплые сливки в желтки. Процедите смесь через сито.</li>
+                        <li>Разлейте по формочкам. Поставьте формочки в глубокий противень, заполненный горячей водой до середины высоты формочек. Выпекайте при 150°C 40-45 минут. Охладите, посыпьте тростниковым сахаром и карамелизируйте горелкой.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Десерты</div>
+                    <h3>Чизкейк без выпечки</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Песочное печенье — 200 г</li>
+                        <li>Сливочное масло — 80 г</li>
+                        <li>Творожный сыр — 400 г</li>
+                        <li>Сливки 33% — 150 мл</li>
+                        <li>Сахарная пудра — 100 г</li>
+                        <li>Желатин — 10 г</li>
+                        <li>Клубника — 150 г</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Измельчите печенье в крошку, смешайте с растопленным маслом и утрамбуйте по дну разъемной формы. Уберите в холодильник.</li>
+                        <li>Желатин замочите в 50 мл воды на 10 минут, затем распустите на водяной бане (не кипятите).</li>
+                        <li>Взбейте творожный сыр с сахарной пудрой и сливками. Влейте тонкой струйкой остывший желатин, продолжая взбивать.</li>
+                        <li>Вылейте массу на основу из печенья. Уберите в холодильник на 4 часа. Сверху украсьте свежей клубникой.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Напитки</div>
+                    <h3>Розовый лимонад</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Лимоны — 3 шт.</li>
+                        <li>Малина (свежая или замороженная) — 100 г</li>
+                        <li>Сахар — 100 г</li>
+                        <li>Вода газированная — 1 л</li>
+                        <li>Лед в кубиках — по вкусу</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>В небольшом сотейнике смешайте 100 мл обычной воды и 100 г сахара. Доведите до кипения, чтобы сахар растворился. Остудите сироп.</li>
+                        <li>Из лимонов выжмите сок. Малину разомните вилкой и процедите через сито, чтобы избавиться от косточек.</li>
+                        <li>В большом графине соедините лимонный сок, получившийся малиновый сок и сахарный сироп.</li>
+                        <li>Залейте холодной газированной водой, добавьте кубики льда и несколько кружочков лимона для красоты.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Завтраки</div>
+                    <h3>Пышные оладьи</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Кефир (теплый) — 250 мл</li>
+                        <li>Яйцо — 1 шт.</li>
+                        <li>Мука — 200 г</li>
+                        <li>Сахар — 1.5 ст. л.</li>
+                        <li>Сода — 0.5 ч. л.</li>
+                        <li>Соль — щепотка</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Кефир слегка подогрейте (он должен быть приятно теплым). Взбейте его с яйцом, сахаром и щепоткой соли.</li>
+                        <li>Постепенно всыпьте муку, замешивая густое тесто (оно должно лениво сползать с ложки).</li>
+                        <li>В самый последний момент добавьте соду и быстро перемешайте. Дайте тесту постоять 5 минут (появятся пузырьки).</li>
+                        <li>**Важно:** больше тесто не перемешивайте! Берите аккуратно ложкой с края и выкладывайте на разогретую с маслом сковороду. Жарьте с двух сторон.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Горячее</div>
+                    <h3>Лазанья Болоньезе</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Листы для лазаньи — 8-10 шт.</li>
+                        <li>Мясной фарш — 400 г</li>
+                        <li>Томаты в собственном соку — 400 г</li>
+                        <li>Лук репчатый — 1 шт.</li>
+                        <li>Соус «Бешамель» — 400 мл</li>
+                        <li>Твердый сыр — 150 г</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Обжарьте мелко нарезанный лук, добавьте фарш и жарьте до готовности. Добавьте измельченные томаты, соль, итальянские травы и тушите 15 минут.</li>
+                        <li>В форму для запекания налейте немного соуса Бешамель. Выложите листы лазаньи.</li>
+                        <li>Сверху распределите часть мясного соуса, полейте Бешамелем и присыпьте сыром. Повторите слои.</li>
+                        <li>Верхний слой листов покройте только Бешамелем и обильно засыпьте сыром. Запекайте при 180°C около 35 минут.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Горячее</div>
+                    <h3>Грибное ризотто</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Рис Арборио (для ризотто) — 200 г</li>
+                        <li>Шампиньоны или белые грибы — 200 г</li>
+                        <li>Лук-шалот или репчатый — 1 шт.</li>
+                        <li>Горячий овощной бульон — около 700 мл</li>
+                        <li>Сливочное масло — 30 г</li>
+                        <li>Пармезан — 40 г</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>В глубокой сковороде обжарьте мелко нарезанный лук и грибы на смеси растительного и сливочного масел.</li>
+                        <li>Всыпьте сухой рис и обжаривайте его вместе с грибами 1-2 минуты, пока зерна не станут прозрачными по краям.</li>
+                        <li>Начните порциями (по одному половнику) добавлять горячий бульон. Постоянно помешивайте рис. Добавляйте следующую порцию только тогда, когда впиталась предыдущая.</li>
+                        <li>Готовьте около 18-20 минут до состояния аль денте. Снимите с огня, вмешайте оставшееся сливочное масло и натертый пармезан.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Десерты</div>
+                    <h3>Яблочный пирог</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Крупные яблоки — 3 шт.</li>
+                        <li>Мука — 150 г</li>
+                        <li>Сахар — 120 г</li>
+                        <li>Сливочное масло — 100 г</li>
+                        <li>Яйца — 2 шт.</li>
+                        <li>Разрыхлитель — 1 ч. л.</li>
+                        <li>Корица — 0.5 ч. л.</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Взбейте размягченное сливочное масло с сахаром, затем по одному введите яйца, продолжая взбивать.</li>
+                        <li>Всыпьте муку с разрыхлителем и корицей, замесите однородное тесто.</li>
+                        <li>Яблоки очистите от сердцевины и нарежьте тонкими дольками.</li>
+                        <li>Вмешайте яблоки в тесто (или красиво выложите их сверху). Переложите в форму и выпекайте при 180°C примерно 40-45 минут.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Салаты</div>
+                    <h3>Салат с креветками</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Очищенные креветки — 150 г</li>
+                        <li>Авокадо — 1 шт.</li>
+                        <li>Томаты черри — 100 г</li>
+                        <li>Салатный микс (зелень) — 1 большой пучок</li>
+                        <li>Оливковое масло — 2 ст. л.</li>
+                        <li>Лимонный сок — 1 ч. л.</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Креветки обжарьте на сковороде с каплей масла и чесноком по 2 минуты со всех сторон. Остудите.</li>
+                        <li>Авокадо очистите, выньте косточку и нашинкуйте кубиками. Черри разрежьте пополам.</li>
+                        <li>В салатник выложите зелень, добавьте авокадо, черри и обжаренные креветки.</li>
+                        <li>Заправьте салат смесью оливкового масла, лимонного сока, соли и черного перца.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="recipe-card" onclick="openRecipe(this)">
+                <div>
+                    <div class="category">Десерты</div>
+                    <h3>Банановый хлеб (кекс)</h3>
+                </div>
+                <button class="open-btn">Открыть рецепт</button>
+                <div class="recipe-details">
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        <li>Очень спелые бананы — 3 шт.</li>
+                        <li>Мука пшеничная — 200 г</li>
+                        <li>Сливочное масло — 100 г</li>
+                        <li>Сахар — 100 г</li>
+                        <li>Яйца — 2 шт.</li>
+                        <li>Сода — 1 ч. л.</li>
+                        <li>Щепотка соли</li>
+                    </ul>
+                    <h4>Приготовление:</h4>
+                    <ol>
+                        <li>Очищенные бананы тщательно разомните вилкой в однородное пюре.</li>
+                        <li>Растопленное сливочное масло смешайте с сахаром и яйцами. Добавьте банановое пюре.</li>
+                        <li>Всыпьте просеянную муку, соду и соль. Хорошо перемешайте лопаткой.</li>
+                        <li>Перелейте тесто в прямоугольную форму для кекса. Выпекайте при 175°C около 50-60 минут (готовность проверяйте деревянной шпажкой).</li>
+                    </ol>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle" class="modal-title">Название блюда</h2>
+            <div id="modalBody" class="modal-body">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Функция открытия модального окна
+        function openRecipe(card) {
+            const title = card.querySelector('h3').innerText;
+            const detailsHtml = card.querySelector('.recipe-details').innerHTML;
+
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerHTML = detailsHtml;
+
+            const modal = document.getElementById('recipeModal');
+            modal.classList.add('show');
+        }
+
+        // Функция закрытия модального окна
+        function closeModal() {
+            const modal = document.getElementById('recipeModal');
+            modal.classList.remove('show');
+        }
+
+        // Закрытие окна при клике на темную область вокруг него
+        window.onclick = function(event) {
+            const modal = document.getElementById('recipeModal');
+            if (event.target == modal) {
+                modal.classList.remove('show');
+            }
+        }
+    </script>
+</body>
+</html>
