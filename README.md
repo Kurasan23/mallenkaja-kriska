@@ -1,0 +1,1 @@
+ricepti dla krisi
